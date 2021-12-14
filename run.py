@@ -26,6 +26,10 @@ def on_reload():
     amount_of_books_per_page = 10    
     pages_at_all = len(list(chunked(json_dicts, amount_of_books_per_page)))
 
+    """
+        In loop script defines indexes for paginator on current page and renders page by template `template.html` 
+        Renderer gets different indexes and books dicts chunked by 2 cols, makes page and saves it in pages/
+    """
     if pages_at_all > 10:
         for index, books_packages in enumerate(list(chunked(json_dicts, amount_of_books_per_page)), start=1):
 
@@ -70,6 +74,7 @@ def main():
     """
         Runs on_reload
         Constantly checks for changes in template file , if there are some runs on_reload() again
+        It needed for more comfortable web-site writing
     """
     on_reload()
     server = Server()

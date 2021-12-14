@@ -1,6 +1,6 @@
 """
-    parses Sci-Fi section of website https://tululu.org/ and creates json dict with books data
-    This dict will be used to render pages in run.py
+    parses Sci-Fi section of website https://tululu.org/ and creates json dicts with books data
+    This dicts will be used to render pages in run.py
 """
 
 from bs4 import BeautifulSoup
@@ -27,6 +27,7 @@ def check_for_redirect(response):
 def get_pages_amount(url):
     """
         Gets amount of pages with Sci-Fi on website
+        It is needed to parse all available books
     """
     response = requests.get(url)
     check_for_redirect(response)
@@ -52,6 +53,11 @@ def parse_book_page(url):
 
     soup = BeautifulSoup(response.text, 'lxml')
 
+    """
+        Script uses selectors for parsing data, selectors are strings with some parts of element`s XPath
+        Also we need to edit some data: strip spaces or other symbs
+    """
+
     title_tag_selector = "table td.ow_px_td div#content h1"
     title_tag = soup.select_one(title_tag_selector)
     title_and_author = title_tag.text.split(" :: ")
@@ -74,7 +80,7 @@ def parse_book_page(url):
 
 def if_text_exist(parameters):   
     """
-        Some books on website are placed without text, function checks if text has text or not
+        Some books on website are placed without text, function checks if book has text or not
     """
     url = "https://tululu.org/txt.php"
 
@@ -124,12 +130,13 @@ def download_img(url, file_name, directory):
 
 def main():
     """
-        Runs all other funcs, and creates json dict, that contains books data and paths to its text and cover
+        Runs all other funcs, and creates json dicts, that contains books data and paths to its text and cover
     """
     json_dicts = []
 
     parser = argparse.ArgumentParser()
 
+    #Args for users
     parser.add_argument('--start_page', type=int, default=1, help='starting page')
     parser.add_argument('--end_page', type=int, default=get_pages_amount("https://tululu.org/l55/1/"),
                         help='ending page')
@@ -140,12 +147,16 @@ def main():
     parser.add_argument('--skip_imgs', action="store_true", help='skip img download')
     parser.add_argument('--skip_txt', action="store_true",  help='skip txt download')
 
-
     args = parser.parse_args()
-
     json_path = os.path.join(args.json_path, "data.json")
-    pbar = tqdm(total=args.end_page - args.start_page)
 
+    pbar = tqdm(total=args.end_page - args.start_page + 1)
+    pbar.update(1)
+
+    """
+        Script goes through loop by tululu.org pages, and parses all books data
+        Script saves data in dicts, then saves them as json file
+    """
     for page_id in range(args.start_page, args.end_page):
         pbar.update(1)
 
