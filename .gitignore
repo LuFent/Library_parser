@@ -1,1 +1,6 @@
 __pycache__
+books/
+pages/
+raw_books/
+images/
+data.json

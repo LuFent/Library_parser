@@ -1,8 +1,8 @@
+# -*- coding: utf-8 -*-
 """
     Renders pages with books cards and creates local server on http://127.0.0.1:5500
     (http://127.0.0.1:5500/pages/index1.html to see first page)
 """
-# -*- coding: utf-8 -*-
 from pathlib import Path
 from livereload import Server
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -10,8 +10,35 @@ from more_itertools import chunked
 
 import json
 
+
 with open('data.json', 'r', encoding='cp1251') as fh:
     json_dicts = json.load(fh)
+
+
+def prepare_books():
+    """
+       Function prepares books` text files, makes html pages with texts
+       If we would try to open .txt files with server codings could be broken
+    """
+
+    Path("books").mkdir(parents=True, exist_ok=True)
+    html_begin = open("html_begin.txt").read()
+    html_end = open("html_end.txt").read()
+
+    for book in json_dicts:
+        text_path = book["text_path"][3::]
+        book_file_name = book["text_path"][13:-4:]
+        html_path = f"books/{book_file_name}.html"
+        book["text_path"] = "../" + html_path
+
+        with open(text_path, encoding='utf-8') as file:
+            text = file.read()
+            text = text.replace("\n", "<br>")
+
+            rendered_page = html_begin + text + html_end
+
+            with open(html_path, 'w', encoding="utf8") as file:
+                file.write(rendered_page)
 
 
 def on_reload():
@@ -76,7 +103,9 @@ def main():
         Constantly checks for changes in template file , if there are some runs on_reload() again
         It needed for more comfortable web-site writing
     """
+    prepare_books()
     on_reload()
+
     server = Server()
     server.watch('template.html', on_reload)
     server.serve(root='.')

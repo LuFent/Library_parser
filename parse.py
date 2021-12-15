@@ -13,6 +13,7 @@ import os
 import argparse
 import requests
 import json
+import pdfkit
 
 
 
@@ -103,14 +104,14 @@ def download_txt(parameters, file_name, directory):
     response = requests.get(url, params=parameters, allow_redirects=False)
     response.raise_for_status()                             
            
-    file_path = os.path.join(directory, "books", file_name)
+    file_path = os.path.join(directory, "raw_books", file_name)
 
-    Path(os.path.join(directory, "books")).mkdir(parents=True, exist_ok=True)
+    Path(os.path.join(directory, "raw_books")).mkdir(parents=True, exist_ok=True)
 
     with open(file_path, 'wb') as file:
         file.write(response.text.encode())
 
-     
+
 def download_img(url, file_name, directory):
     """
         downloads cover image
@@ -162,18 +163,18 @@ def main():
 
         url = f"https://tululu.org/l55/{page_id}"
         response = requests.get(url)
-        response.raise_for_status() 
+        response.raise_for_status()
 
         soup = BeautifulSoup(response.text, 'lxml')
         book_cards_selector = "div#content"
         book_cards = soup.select_one(book_cards_selector).select("table")
-        
-        for book_card in book_cards:                  
-            
+
+        for book_card in book_cards:
+
             book_url = urljoin(url, book_card.select_one("a")["href"])
-            book_id = book_url.split('/b')[-1]         
-            
-            book_data = parse_book_page(book_url)       
+            book_id = book_url.split('/b')[-1]
+
+            book_data = parse_book_page(book_url)
 
             parameters = {"id": book_id}
 
@@ -181,7 +182,7 @@ def main():
 
                 if not args.skip_txt:
                     file_name = sanitize_filename(f"book_{book_id}_{book_data['title']}.txt").replace(" ", "_")
-                    book_data['text_path'] = ".." + "/" + "books" + "/" + file_name
+                    book_data['text_path'] = ".." + "/" + "raw_books" + "/" + file_name
                     download_txt(parameters,  sanitize_filename(f"book_{book_id}_{book_data['title']}.txt")
                                  .replace(" ", "_"), args.dest_folder)
 
@@ -195,8 +196,8 @@ def main():
     pbar.close()
 
     with open(json_path, 'a+') as file:
-        json.dump(json_dicts, file, ensure_ascii=False, sort_keys=True, indent=4)    
-    
+        json.dump(json_dicts, file, ensure_ascii=False, sort_keys=True, indent=4)
+
 
 if __name__ == '__main__':
     main()
